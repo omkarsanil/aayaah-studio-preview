@@ -1,0 +1,7 @@
+.env
+.env.*
+**/.env*
+*.pem
+*.key
+auth.json
+credentials.json
