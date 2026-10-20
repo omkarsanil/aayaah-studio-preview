@@ -21,55 +21,6 @@ document.querySelectorAll('[data-filter]').forEach(button => button.addEventList
   document.querySelector('[data-filter-status]').textContent = `${count} ${count === 1 ? 'piece' : 'pieces'} shown.`;
 }));
 
-const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
-const gallery = document.querySelector('.hero-gallery');
-const stage = document.querySelector('.gallery-stage');
-const motionButton = document.querySelector('[data-motion]');
-const galleryPanels = [...document.querySelectorAll('.gallery-panel')];
-const compactScreen = matchMedia('(max-width: 760px)');
-const pageProgress = document.querySelector('[data-page-progress]');
-let manualPause = false;
-let pendingFrame = false;
-function updateMotion() {
-  pendingFrame = false;
-  const availableScroll = document.documentElement.scrollHeight - innerHeight;
-  const readingProgress = availableScroll > 0 ? Math.min(1, Math.max(0, scrollY / availableScroll)) : 0;
-  pageProgress?.style.setProperty('--page-progress', String(readingProgress));
-  if (!stage) return;
-  const paused = manualPause || reduceMotion.matches;
-  motionButton.setAttribute('aria-pressed', String(paused));
-  motionButton.textContent = reduceMotion.matches ? 'Reduced motion enabled' : paused ? 'Resume 3D scroll' : 'Pause 3D scroll';
-  motionButton.disabled = reduceMotion.matches;
-  if (paused) {
-    stage.style.setProperty('--gallery-tilt','0deg');
-    stage.style.setProperty('--gallery-shift','0px');
-    galleryPanels.forEach(panel => {
-      panel.style.setProperty('--scroll-drift','0px');
-      panel.style.setProperty('--scroll-yaw','0deg');
-    });
-    return;
-  }
-  const rect = gallery.getBoundingClientRect();
-  if (rect.bottom < -100 || rect.top > innerHeight + 100) return;
-  const progress = Math.max(-1, Math.min(1, (innerHeight * .48 - rect.top - rect.height * .5) / innerHeight));
-  stage.style.setProperty('--gallery-tilt', `${3 + progress * 13}deg`);
-  stage.style.setProperty('--gallery-shift', `${progress * 36}px`);
-  galleryPanels.forEach((panel,index) => {
-    const direction = index % 2 === 0 ? -1 : 1;
-    panel.style.setProperty('--scroll-drift', `${compactScreen.matches ? progress * direction * 18 : 0}px`);
-    panel.style.setProperty('--scroll-yaw', `${compactScreen.matches ? progress * direction * 5 : 0}deg`);
-  });
-}
-function requestMotion() { if(!pendingFrame) { pendingFrame = true; requestAnimationFrame(updateMotion); } }
-if(stage || pageProgress) {
-  addEventListener('scroll',requestMotion,{passive:true});
-  addEventListener('resize',requestMotion,{passive:true});
-  reduceMotion.addEventListener('change',updateMotion);
-  compactScreen.addEventListener('change',updateMotion);
-  motionButton?.addEventListener('click',() => { manualPause = !manualPause; updateMotion(); });
-  updateMotion();
-}
-
 const enquiry = document.querySelector('#enquiry-dialog');
 const message = enquiry.querySelector('textarea');
 const channelButtons = enquiry.querySelectorAll('[data-select-channel]');
